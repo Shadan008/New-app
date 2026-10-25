@@ -1,6 +1,5 @@
 """
 Dark Store Location Optimizer — Chennai
-AS 5570 Assignment 1
 
 Profit-maximizing facility location model:
   - choose which candidate dark stores to open (<= K of them)
