@@ -1,9 +1,0 @@
-# Python version is pinned to 3.12 in .python-version and runtime.txt
-streamlit==1.41.1
-pulp==2.8.0
-folium==0.20.0
-streamlit-folium==0.27.4
-pandas==2.2.3
-numpy==1.26.4
-altair==5.5.0
-typing-extensions>=4.12.2,<5
