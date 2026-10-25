@@ -5,3 +5,4 @@ pandas==2.2.3
 numpy==1.26.4
 pydeck==0.9.1
 typing-extensions>=4.12.2,<5
+matplotlib
