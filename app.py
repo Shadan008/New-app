@@ -13,6 +13,7 @@ feasibility bug found (and fixed) in the earlier draft of this model.
 import pandas as pd
 import streamlit as st
 import pydeck as pdk
+import matplotlib.pyplot as plt
 
 from core import (
     LAT_MIN, LAT_MAX, LON_MIN, LON_MAX,
@@ -180,9 +181,10 @@ with st.spinner("Running sensitivity sweep for K = 2, 5, 10, 20, 25 (10,000 x 50
         k_values=(2, 5, 10, 20, 25),
     )
 
-# Prepare the sensitivity-analysis data
+# Prepare sensitivity-analysis data
 chart_df = sens_df.copy()
 
+# Normalize column names and types before plotting.
 chart_df["Max Open (K)"] = pd.to_numeric(
     chart_df["Max Open (K)"], errors="coerce"
 )
@@ -190,35 +192,49 @@ chart_df["Profit (Rs.)"] = pd.to_numeric(
     chart_df["Profit (Rs.)"], errors="coerce"
 )
 
+required_k = [2, 5, 10, 20, 25]
 chart_df = chart_df[
-    chart_df["Max Open (K)"].isin([2, 5, 10, 20, 25])
+    chart_df["Max Open (K)"].isin(required_k)
 ].dropna(subset=["Max Open (K)", "Profit (Rs.)"])
 
-chart_df = chart_df.sort_values("Max Open (K)")
+# Ensure one row per required K, in the required order.
+chart_df = (
+    chart_df.drop_duplicates(subset=["Max Open (K)"])
+    .set_index("Max Open (K)")
+    .reindex(required_k)
+    .reset_index()
+)
 
 st.subheader("Profit comparison")
 
-if len(chart_df) == 5:
-    st.bar_chart(
-        chart_df,
-        x="Max Open (K)",
-        y="Profit (Rs.)",
-        x_label="Maximum dark stores allowed (K)",
-        y_label="Monthly profit (Rs.)",
-        height=450,
+if chart_df["Profit (Rs.)"].notna().all():
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(
+        chart_df["Max Open (K)"],
+        chart_df["Profit (Rs.)"],
+        marker="o",
+        linewidth=2,
     )
+    ax.set_xlabel("Maximum dark stores allowed (K)")
+    ax.set_ylabel("Monthly profit (Rs.)")
+    ax.set_xticks(required_k)
+    ax.ticklabel_format(axis="y", style="plain", useOffset=False)
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+    st.pyplot(fig, clear_figure=True)
+    plt.close(fig)
 else:
     st.error(
-        f"Expected 5 results, but found {len(chart_df)}. "
-        "Check the sensitivity-analysis output."
+        "The sensitivity analysis did not return valid profits for all "
+        "required K values (2, 5, 10, 20, 25)."
     )
 
+# Render the sensitivity table only once.
 st.dataframe(
     chart_df,
     use_container_width=True,
     hide_index=True,
 )
-st.dataframe(sens_df, use_container_width=True, hide_index=True)
 
 with st.expander("How to read this curve"):
     st.markdown(
