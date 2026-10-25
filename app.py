@@ -181,7 +181,7 @@ with st.spinner("Running sensitivity sweep for K = 2, 5, 10, 20, 25 (10,000 x 50
         k_values=(2, 5, 10, 20, 25),
     )
 
-# Plot profit for the five required store limits
+# Prepare the sensitivity-analysis data
 chart_df = sens_df.copy()
 
 chart_df["Max Open (K)"] = pd.to_numeric(
@@ -191,25 +191,34 @@ chart_df["Profit (Rs.)"] = pd.to_numeric(
     chart_df["Profit (Rs.)"], errors="coerce"
 )
 
-chart_df = (
-    chart_df[
-        chart_df["Max Open (K)"].isin([2, 5, 10, 20, 25])
-    ]
-    .dropna(subset=["Max Open (K)", "Profit (Rs.)"])
-    .sort_values("Max Open (K)")
-)
+chart_df = chart_df[
+    chart_df["Max Open (K)"].isin([2, 5, 10, 20, 25])
+].dropna(subset=["Max Open (K)", "Profit (Rs.)"])
+
+chart_df = chart_df.sort_values("Max Open (K)")
+
+st.subheader("Profit comparison")
 
 if len(chart_df) == 5:
-    st.line_chart(
-        chart_df.set_index("Max Open (K)")["Profit (Rs.)"],
+    st.bar_chart(
+        chart_df,
+        x="Max Open (K)",
+        y="Profit (Rs.)",
         x_label="Maximum dark stores allowed (K)",
         y_label="Monthly profit (Rs.)",
-        height=400,
+        height=450,
     )
 else:
-    st.error("Expected five sensitivity results: K = 2, 5, 10, 20, 25.")
+    st.error(
+        f"Expected 5 results, but found {len(chart_df)}. "
+        "Check the sensitivity-analysis output."
+    )
 
-st.dataframe(chart_df, use_container_width=True, hide_index=True)
+st.dataframe(
+    chart_df,
+    use_container_width=True,
+    hide_index=True,
+)
 st.dataframe(sens_df, use_container_width=True, hide_index=True)
 
 with st.expander("How to read this curve"):
